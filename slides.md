@@ -180,6 +180,7 @@ end
   * [Mock](https://hexdocs.pm/mock/Mock.html)
   * [Dotenvy](https://hexdocs.pm/dotenvy/readme.html)
   * [HTTPoison](https://hexdocs.pm/httpoison/HTTPoison.html)
+  * [Dialixyr](https://hexdocs.pm/dialyxir/readme.html)
 
 ---
 

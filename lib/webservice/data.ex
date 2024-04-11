@@ -12,9 +12,7 @@ defmodule WebService.Data do
   """
 
   alias WebService.Data.{API, Cache}
-
-  @timeframe 60_000
-  @max_requests 60
+  alias WebService.{Utils, Airport, Weather}
 
   # --- Public functions ---
   @doc """
@@ -29,7 +27,7 @@ defmodule WebService.Data do
   def populate(cities) do
     chunks =
       cities
-      |> Stream.chunk_every(@max_requests)
+      |> Stream.chunk_every(Utils.get_max_requests())
       |> Enum.to_list()
 
     {_, {count, _}} = Enum.map_reduce(chunks, {0, length(chunks) - 1}, &process_cities/2)
@@ -48,7 +46,7 @@ defmodule WebService.Data do
 
   The results will be cached to avoid duplicated requests.
   """
-  @spec fetch_city(map()) :: {:error, API.error(), map()} | {:ok, map(), map()}
+  @spec fetch_city(Airport.t()) :: {:error, API.error(), Airport.t()} | {:ok, Weather.t(), Airport.t()}
   def fetch_city(city) do
     case fetch_city_from_cache(city) do
       {:error, :not_found} ->
@@ -67,8 +65,8 @@ defmodule WebService.Data do
   defp process_cities(cities, {counter, i}) do
     do_process_cities(cities)
 
-    IO.puts("\nDeteniendo peticiones por #{@timeframe / 1_000} segundos...\n")
-    Process.sleep(@timeframe)
+    IO.puts("\nDeteniendo peticiones por #{Utils.get_timeframe() / 1_000} segundos...\n")
+    Utils.get_timeframe() |> Process.sleep()
     {nil, {counter + length(cities), i-1}}
   end
 
@@ -86,17 +84,19 @@ defmodule WebService.Data do
     end)
   end
 
-  defp fetch_city_from_api(%{iata: iata, lat: lat, lon: lon}) do
+  defp fetch_city_from_api(%Airport{iata: iata, lat: lat, lon: lon}) when is_number(lat) and is_number(lon) do
     response = API.by_coordinates(lat, lon)
     save_in_cache(iata, response)
+    response
   end
-  defp fetch_city_from_api(%{name: name}) do
+  defp fetch_city_from_api(%Airport{name: name}) do
     response = API.by_name(name)
     save_in_cache(name, response)
+    response
   end
 
-  defp fetch_city_from_cache(%{iata: iata}), do: Cache.fetch_city(iata)
-  defp fetch_city_from_cache(%{name: name}), do: Cache.fetch_city(name)
+  defp fetch_city_from_cache(%Airport{iata: iata}), do: Cache.fetch_city(iata)
+  defp fetch_city_from_cache(%Airport{name: name}), do: Cache.fetch_city(name)
 
   defp save_in_cache(key, value), do: Cache.put_city(key, value)
 end

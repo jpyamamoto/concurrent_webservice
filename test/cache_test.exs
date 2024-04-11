@@ -1,28 +1,32 @@
 defmodule WebServiceTest.Data.Cache do
   use ExUnit.Case
 
+  alias WebService.Airport
+
   setup do
     WebService.Data.Cache.start_link([])
     %{}
   end
 
   test "cache cities", _ do
+    WebService.Data.Cache.clean_cache()
+
     WebServiceTest.get_test_airports()
     |> Enum.shuffle()
-    |> Enum.map(fn {key, _} ->
-      assert WebService.Data.Cache.fetch_city(key) == {:error, :not_found}
+    |> Enum.map(fn %Airport{iata: iata} ->
+      assert WebService.Data.Cache.fetch_city(iata) == {:error, :not_found}
     end)
 
     WebServiceTest.get_test_airports()
     |> Enum.shuffle()
-    |> Enum.map(fn {key, value} ->
-      assert WebService.Data.Cache.put_city(key, value)
+    |> Enum.map(fn (%Airport{iata: iata} = airport) ->
+      assert WebService.Data.Cache.put_city(iata, airport)
     end)
 
     WebServiceTest.get_test_airports()
     |> Enum.shuffle()
-    |> Enum.map(fn {key, value} ->
-      assert WebService.Data.Cache.fetch_city(key) == {:ok, value}
+    |> Enum.map(fn (%Airport{iata: iata} = airport) ->
+      assert WebService.Data.Cache.fetch_city(iata) == {:ok, airport}
     end)
   end
 

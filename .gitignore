@@ -23,3 +23,5 @@ erl_crash.dump
 webservice-*.tar
 
 /.elixir_ls/
+
+.env

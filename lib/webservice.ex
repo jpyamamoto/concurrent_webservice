@@ -41,7 +41,7 @@ defmodule WebService do
     |> Stream.uniq()
     |> WebService.Data.populate()
 
-    WebService.Tickets.process(tickets)
+    WebService.Ticket.process(tickets)
 
     IO.puts("Finalizó el procesamiento del archivo #{file}.")
   end

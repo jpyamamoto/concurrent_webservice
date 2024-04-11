@@ -1,9 +1,18 @@
-defmodule WebService.Airports do
+defmodule WebService.Airport do
   @moduledoc """
   Functions related to the retrieval of airport's data.
 
   This module takes advantage of Elixir's metaprogramming capabilities.
   """
+
+  @type t() :: %__MODULE__{
+    name: String.t() | nil,
+    lat: number() | nil,
+    lon: number() | nil,
+    iata: String.t() | nil
+  }
+
+  defstruct [:name, :lon, :lat, :iata]
 
   @external_resource "priv/airports.csv"
 
@@ -27,7 +36,7 @@ defmodule WebService.Airports do
 
   *Recompilation is required whenever that file is modified.*
   """
-  @spec airport_from_iata(String.t()) :: nil | map()
+  @spec airport_from_iata(String.t()) :: nil | t()
 
   @external_resource
   |> File.stream!()
@@ -46,7 +55,7 @@ defmodule WebService.Airports do
   end)
   |> Enum.each(fn %{"iata_code" => iata, "name" => name, "lat" => lat, "lon" => lon} ->
     def airport_from_iata(unquote(iata)) do
-      %{name: unquote(name), iata: unquote(iata), lat: unquote(lat), lon: unquote(lon)}
+      %__MODULE__{name: unquote(name), iata: unquote(iata), lat: unquote(lat), lon: unquote(lon)}
     end
   end)
 

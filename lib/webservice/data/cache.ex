@@ -4,10 +4,12 @@ defmodule WebService.Data.Cache do
   """
   use Agent
 
+  alias WebService.Weather
+  alias WebService.Data.API
+
   @doc """
   Start listening for events.
-  The first argument is irrelevant, and whatever is given
-  will be discarded.
+  The first argument is irrelevant, and whatever is given will be discarded.
   """
   @spec start_link(any()) :: GenServer.on_start()
   def start_link(_) do
@@ -15,16 +17,12 @@ defmodule WebService.Data.Cache do
   end
 
   @doc """
-  Fetch the information associated to the city passed
-  as the only argument.
-  If the city does not exist, a tuple indicating an
-  error will be returned.
+  Fetch the information associated to the city passed as the only argument.
+  If the city does not exist, a tuple indicating an error will be returned.
   """
-  @spec fetch_city(String.t()) :: {:error, :not_found} | {:ok, {atom(), map()}}
+  @spec fetch_city(String.t()) :: {:error, :not_found} | {:ok, {:ok, Weather.t()}} | {:ok, {:error, API.error()}}
   def fetch_city(key) do
-    Agent.get(__MODULE__,  fn m ->
-      case Map.get(m, key) do
-        nil ->
+    Agent.get(__MODULE__,  fn m -> case Map.get(m, key) do nil ->
           {:error, :not_found}
         value ->
           {:ok, value}
@@ -35,8 +33,12 @@ defmodule WebService.Data.Cache do
   @doc """
   Store the information of a city in the cache.
   """
-  @spec put_city(String.t(), String.t()) :: :ok
+  @spec put_city(String.t(), {atom(), Weather.t()}) :: :ok
   def put_city(key, value) do
     Agent.update(__MODULE__, fn m -> Map.put(m, key, value) end)
+  end
+
+  def clean_cache() do
+    Agent.update(__MODULE__, fn _ -> %{} end)
   end
 end
